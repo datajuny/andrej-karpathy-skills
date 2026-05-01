@@ -65,3 +65,56 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## 5. No Closing Colons (Korean Output)
+
+**End Korean sentences with a period, not a colon.**
+
+When the user writes in Korean, your output is also Korean:
+- Don't end sentences with `:` even if the next line is a list or example.
+- LLMs trained on English docs leak the colon habit into Korean. Catch it.
+- The test: every Korean sentence terminator should be `.`, `?`, or `!` — not `:`.
+- Colons are fine inside code, key-value pairs, or labels. Not as sentence enders.
+
+## 6. File Header Comments in Korean
+
+**First line of every new source file: a one-line Korean comment stating its role.**
+
+When creating a new file:
+- TypeScript/JavaScript: `// 사용자 인증 상태를 관리하는 Context Provider`
+- Python: `# KIS API 호출을 비동기로 래핑하는 클라이언트`
+- SQL: `-- 일별 집계 결과를 저장하는 머티리얼라이즈드 뷰`
+- Place it directly under required directives (`'use client'`, `'use server'`, shebang).
+- Skip config files (`*.config.ts`, `package.json`, etc.).
+
+Why: agents read files selectively, not whole codebases. A one-line Korean header gives instant context so the next session (human or agent) can navigate without re-reading the entire file.
+
+## 7. Plan + Checklist + Context Notes
+
+**Before any non-trivial task, produce three artifacts. Don't start coding without them.**
+
+- **Plan** — what we're building and why.
+- **Checklist** (`checklist.md`) — concrete tasks as checkboxes. Tick as you go.
+- **Context Notes** (`context-notes.md`) — decisions made during the work and the reasoning behind them. Append continuously.
+
+If the user gives only a plan and asks you to start coding, stop and ask: "Should I create the checklist and context notes first?" The next session — yours or someone else's — needs the notes to pick up where you left off without re-deriving every decision.
+
+## 8. Run Tests Before Marking Complete
+
+**If you touched code, run the tests before saying "done".**
+
+- `npm test`, `pytest`, `cargo test`, whatever the project uses — run it.
+- If tests pass, report results. If they fail, fix and re-run.
+- No test setup? At minimum, verify the project builds/compiles.
+- Run tests proactively, before the user signals "끝", "완료", "다 됐어" — not after.
+
+This is the step LLMs skip most often. Treat it as non-negotiable.
+
+## 9. Semantic Commits
+
+**Commit when one logical change is complete. Don't wait for the user to ask.**
+
+- The test: "Can I describe this commit in one sentence?" If yes, commit. If no, the changes are still mixed — split them.
+- Good: "auth 미들웨어 추가". Bad: "auth 추가하고 UI도 고치고 버그도 수정" (split into 3).
+- Don't accumulate 20 unrelated edits and lose the ability to roll back individually.
+- Don't commit just to commit — meaningful units only.
