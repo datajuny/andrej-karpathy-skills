@@ -113,6 +113,20 @@ This is the step LLMs skip most often. Treat it as non-negotiable.
 - Don't accumulate 20 unrelated edits and lose the ability to roll back individually.
 - Don't commit just to commit — meaningful units only.
 
+Note: For solo prototypes or throwaway scripts, group commits loosely if it slows you down. The point is reversibility, not ceremony.
+
+## 10. Read Errors, Don't Guess
+
+**Read the actual error/log line. Don't pattern-match from memory.**
+
+When something fails:
+- Read the full error message and stack trace.
+- Check the actual log output, not what you assume it should say.
+- Don't apply a "common fix" before confirming the cause.
+- If unclear, add a print/log to verify state — then fix.
+
+This is the step LLMs skip most often after "run tests". They guess from error keywords and apply the most-recent-pattern fix. That's how a one-line bug becomes a three-file refactor.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
