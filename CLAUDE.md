@@ -2,17 +2,21 @@
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
+**Scope:** Only what current models still get wrong. If the model or the harness already handles something reliably, it doesn't belong here - a rule that restates default behavior burns context and buys nothing.
+
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## 1. Think Before Coding
+## 1. State Assumptions, Then Proceed
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+**Say what you assumed. Keep going. Default the rest.**
 
 Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+- State your assumptions in one line, then start.
+- If multiple interpretations exist, pick the likeliest and say which one you picked.
+- If a simpler approach exists, say so while doing the work - not as a question that blocks it.
+- Ask only when the answer changes what gets built, not how well, and the wrong choice can't be cheaply undone.
+
+A stated assumption gets corrected in seconds. A question costs a round-trip and hands the work back to the user. If you're about to ask a second question in one task, you're doing it wrong.
 
 ## 2. Simplicity First
 
@@ -42,91 +46,30 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-## 4. Goal-Driven Execution
+## 4. Verify Before Done
 
-**Define success criteria. Loop until verified.**
+**If you touched code, run the check before saying "done" - and report what actually ran.**
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
-## 5. No Closing Colons (Korean Output)
-
-**End Korean sentences with a period, not a colon.**
-
-When the user writes in Korean, your output is also Korean:
-- Don't end sentences with `:` even if the next line is a list or example.
-- LLMs trained on English docs leak the colon habit into Korean. Catch it.
-- The test: every Korean sentence terminator should be `.`, `?`, or `!` — not `:`.
-- Colons are fine inside code, key-value pairs, or labels. Not as sentence enders.
-
-## 6. File Header Comments in Korean
-
-**First line of every new source file: a one-line Korean comment stating its role.**
-
-When creating a new file:
-- TypeScript/JavaScript: `// 사용자 인증 상태를 관리하는 Context Provider`
-- Python: `# KIS API 호출을 비동기로 래핑하는 클라이언트`
-- SQL: `-- 일별 집계 결과를 저장하는 머티리얼라이즈드 뷰`
-- Place it directly under required directives (`'use client'`, `'use server'`, shebang).
-- Skip config files (`*.config.ts`, `package.json`, etc.).
-
-Why: agents read files selectively, not whole codebases. A one-line Korean header gives instant context so the next session (human or agent) can navigate without re-reading the entire file.
-
-## 7. Plan + Checklist + Context Notes
-
-**Before any non-trivial task, produce three artifacts. Don't start coding without them.**
-
-- **Plan** — what we're building and why.
-- **Checklist** (`checklist.md`) — concrete tasks as checkboxes. Tick as you go.
-- **Context Notes** (`context-notes.md`) — decisions made during the work and the reasoning behind them. Append continuously.
-
-If the user gives only a plan and asks you to start coding, stop and ask: "Should I create the checklist and context notes first?" The next session — yours or someone else's — needs the notes to pick up where you left off without re-deriving every decision.
-
-## 8. Run Tests Before Marking Complete
-
-**If you touched code, run the tests before saying "done".**
-
-- `npm test`, `pytest`, `cargo test`, whatever the project uses — run it.
-- If tests pass, report results. If they fail, fix and re-run.
-- No test setup? At minimum, verify the project builds/compiles.
-- Run tests proactively, before the user signals "끝", "완료", "다 됐어" — not after.
+- `npm test`, `pytest`, `cargo test`, whatever the project uses. Smallest relevant check first, broader checks when risk is high.
+- No test setup? At minimum, verify the project builds or typechecks.
+- Report the exact command and its result: "passed", "failed with X", or "not run because Y".
+- Never write "done", "fixed", or "works" unless a concrete check backs it.
+- Run it proactively, before the user signals "끝", "완료", "다 됐어".
 
 This is the step LLMs skip most often. Treat it as non-negotiable.
 
-## 9. Semantic Commits
+## 5. Teach One Thing On The Way Out
 
-**Commit when one logical change is complete. Don't wait for the user to ask.**
+**End with what the user would want to know next time. Two or three sentences.**
 
-- The test: "Can I describe this commit in one sentence?" If yes, commit. If no, the changes are still mixed — split them.
-- Good: "auth 미들웨어 추가". Bad: "auth 추가하고 UI도 고치고 버그도 수정" (split into 3).
-- Don't accumulate 20 unrelated edits and lose the ability to roll back individually.
-- Don't commit just to commit — meaningful units only.
+When the work is done:
+- Name the one concept, tradeoff, or gotcha that actually mattered here.
+- Teach what the code doesn't show: why this way over the obvious one, which default you leaned on, what breaks first at scale.
+- If it needs a heading, it's too long. If it restates the diff, delete it.
+- Skip it when the change is trivial, or when the user is the one who taught you the thing.
 
-Note: For solo prototypes or throwaway scripts, group commits loosely if it slows you down. The point is reversibility, not ceremony.
-
-## 10. Read Errors, Don't Guess
-
-**Read the actual error/log line. Don't pattern-match from memory.**
-
-When something fails:
-- Read the full error message and stack trace.
-- Check the actual log output, not what you assume it should say.
-- Don't apply a "common fix" before confirming the cause.
-- If unclear, add a print/log to verify state — then fix.
-
-This is the step LLMs skip most often after "run tests". They guess from error keywords and apply the most-recent-pattern fix. That's how a one-line bug becomes a three-file refactor.
+Why: an agent that only ships code leaves the user unable to maintain it. They should finish each task slightly more able to do it without you.
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and stated assumptions get corrected early instead of surfacing as mistakes late.
